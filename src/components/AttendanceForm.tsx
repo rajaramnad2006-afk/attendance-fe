@@ -32,22 +32,20 @@ export function AttendanceForm({ studentName }: AttendanceFormProps) {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!code.trim()) {
       toast({ title: "Enter a code", variant: "destructive" });
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      const result = submitAttendance(studentName, code, location);
-      toast({
-        title: result.success ? "✅ Success" : "❌ Error",
-        description: result.message,
-        variant: result.success ? "default" : "destructive",
-      });
-      if (result.success) setCode("");
-      setLoading(false);
-    }, 600);
+    const result = await submitAttendance(studentName, code, location);
+    toast({
+      title: result.success ? "✅ Success" : "❌ Error",
+      description: result.message,
+      variant: result.success ? "default" : "destructive",
+    });
+    if (result.success) setCode("");
+    setLoading(false);
   };
 
   return (
@@ -69,17 +67,17 @@ export function AttendanceForm({ studentName }: AttendanceFormProps) {
         />
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button
           variant="outline"
           onClick={getLocation}
           disabled={locLoading || !!location}
-          className="flex-1"
+          className="flex-1 h-11"
         >
           <MapPin className="w-4 h-4 mr-2" />
           {location ? "Located ✓" : locLoading ? "Getting..." : "Get Location"}
         </Button>
-        <Button variant="outline" className="flex-1" disabled>
+        <Button variant="outline" className="flex-1 h-11" disabled>
           <Camera className="w-4 h-4 mr-2" />
           Selfie (Preview)
         </Button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { getAttendanceRecords, type AttendanceRecord } from "@/utils/attendance";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,8 +6,18 @@ import { Search, MapPin, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function AttendanceTable() {
-  const records = getAttendanceRecords();
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [filter, setFilter] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRecords() {
+      const data = await getAttendanceRecords();
+      setRecords(data);
+      setLoading(false);
+    }
+    fetchRecords();
+  }, []);
 
   const filtered = records.filter(
     (r) =>
@@ -29,8 +39,8 @@ export function AttendanceTable() {
         />
       </div>
 
-      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-soft">
-        <Table>
+      <div className="bg-card rounded-2xl border border-border overflow-x-auto shadow-soft">
+        <Table className="min-w-[700px]">
           <TableHeader>
             <TableRow className="bg-secondary/50">
               <TableHead>Student</TableHead>
@@ -43,7 +53,13 @@ export function AttendanceTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                  Loading attendance records...
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                   No attendance records found.

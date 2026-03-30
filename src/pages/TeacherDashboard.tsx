@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Play, Square, Users, DoorOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,42 +16,66 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function TeacherDashboard() {
-  const [session, setSession] = useState<ActiveSession | null>(getActiveSession);
+  const [session, setSession] = useState<ActiveSession | null>(null);
+  const [loading, setLoading] = useState(true);
   const [room, setRoom] = useState("");
-  const [students, setStudents] = useState<AttendanceRecord[]>(
-    session ? getSessionAttendance(session.code) : []
-  );
+  const [students, setStudents] = useState<AttendanceRecord[]>([]);
   const { toast } = useToast();
 
-  const handleStart = () => {
+  useEffect(() => {
+    async function init() {
+      const active = await getActiveSession();
+      setSession(active);
+      if (active) {
+        const records = await getSessionAttendance(active.code);
+        setStudents(records);
+      }
+      setLoading(false);
+    }
+    init();
+  }, []);
+
+  const handleStart = async () => {
     if (!room.trim()) {
       toast({ title: "Enter a room number", variant: "destructive" });
       return;
     }
-    const s = startSession(room.trim());
-    setSession(s);
-    setStudents([]);
-    toast({ title: "Session started!", description: `Code: ${s.code}` });
+    const s = await startSession(room.trim());
+    if (s) {
+      setSession(s);
+      setStudents([]);
+      toast({ title: "Session started!", description: `Code: ${s.code}` });
+    }
   };
 
-  const handleEnd = () => {
-    if (session) setStudents(getSessionAttendance(session.code));
-    endSession();
+  const handleEnd = async () => {
+    if (session) {
+      const records = await getSessionAttendance(session.code);
+      setStudents(records);
+    }
+    await endSession();
     setSession(null);
     toast({ title: "Session ended" });
   };
 
-  const handleExpire = useCallback(() => {
-    if (session) setStudents(getSessionAttendance(session.code));
-    endSession();
+  const handleExpire = useCallback(async () => {
+    if (session) {
+      const records = await getSessionAttendance(session.code);
+      setStudents(records);
+    }
+    await endSession();
     setSession(null);
     toast({ title: "Session expired", variant: "destructive" });
   }, [session, toast]);
 
-  // Refresh students list periodically
-  const refreshStudents = () => {
-    if (session) setStudents(getSessionAttendance(session.code));
+  const refreshStudents = async () => {
+    if (session) {
+      const records = await getSessionAttendance(session.code);
+      setStudents(records);
+    }
   };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
@@ -86,9 +110,9 @@ export default function TeacherDashboard() {
       ) : (
         <div className="space-y-6">
           <CodeDisplay code={session.code} room={session.room} />
-          <Timer expiry={session.expiry} onExpire={handleExpire} />
+          <Timer expiry={new Date(session.expiry).getTime()} onExpire={handleExpire} />
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
               variant="destructive"
               onClick={handleEnd}
@@ -105,9 +129,9 @@ export default function TeacherDashboard() {
 
           {students.length > 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-card rounded-2xl p-5 shadow-soft border border-border"
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               className="bg-card rounded-2xl p-5 shadow-soft border border-border"
             >
               <h3 className="font-heading font-semibold text-card-foreground mb-3 flex items-center gap-2">
                 <Users className="w-4 h-4 text-success" />

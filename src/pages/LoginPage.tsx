@@ -1,24 +1,43 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { GraduationCap, BookOpen, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { GraduationCap, BookOpen, User, Hash, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { setUser } from "@/utils/attendance";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
-  const [name, setName] = useState("");
   const [role, setRole] = useState<"student" | "teacher" | null>(null);
+  const [name, setName] = useState("");
+  const [registerNumber, setRegisterNumber] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = () => {
-    if (!name.trim() || !role) {
-      toast({ title: "Please enter your name and select a role", variant: "destructive" });
+    if (!role) {
+      toast({ title: "Please select a role", variant: "destructive" });
       return;
     }
-    setUser({ name: name.trim(), role });
+
+    if (role === "teacher" && !name.trim()) {
+      toast({ title: "Please enter your name", variant: "destructive" });
+      return;
+    }
+
+    if (role === "student" && (!registerNumber.trim() || !password.trim())) {
+      toast({ title: "Please enter both Register Number and Password", variant: "destructive" });
+      return;
+    }
+
+    if (role === "student") {
+      // In a real app we would authenticate the password here
+      setUser({ name: registerNumber.trim(), role });
+    } else {
+      setUser({ name: name.trim(), role });
+    }
+    
     navigate("/dashboard");
   };
 
@@ -38,21 +57,8 @@ export default function LoginPage() {
           <p className="text-muted-foreground mt-1 text-sm">Smart Attendance Management</p>
         </div>
 
-        <div className="bg-card rounded-2xl p-6 shadow-soft border border-border space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground">Your Name</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="pl-10 h-11"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
+        <div className="bg-card rounded-2xl p-6 shadow-soft border border-border space-y-6">
+          <div className="space-y-3">
             <label className="text-sm font-medium text-card-foreground">I am a...</label>
             <div className="grid grid-cols-2 gap-3">
               {([
@@ -77,9 +83,73 @@ export default function LoginPage() {
             </div>
           </div>
 
+          <AnimatePresence mode="popLayout">
+            {role === "teacher" && (
+              <motion.div
+                key="teacher"
+                initial={{ opacity: 0, height: 0, y: -10 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-card-foreground">Your Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="pl-10 h-11"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {role === "student" && (
+              <motion.div
+                key="student"
+                initial={{ opacity: 0, height: 0, y: -10 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-card-foreground">Register Number</label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter your register number"
+                      value={registerNumber}
+                      onChange={(e) => setRegisterNumber(e.target.value)}
+                      className="pl-10 h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-card-foreground">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 h-11"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <Button
             onClick={handleLogin}
-            disabled={!name.trim() || !role}
+            disabled={!role}
             className="w-full h-11 gradient-primary text-primary-foreground font-semibold shadow-glow-primary hover:opacity-90 transition-opacity"
           >
             Continue

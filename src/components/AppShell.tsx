@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { logout, type AppUser } from "@/utils/attendance";
+import { logout, endSession, type AppUser } from "@/utils/attendance";
 import { Button } from "@/components/ui/button";
 
 interface AppShellProps {
@@ -28,7 +28,10 @@ export function AppShell({ user, children }: AppShellProps) {
     { label: "History", icon: History, path: "/history" },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (user.role === "teacher") {
+      await endSession();
+    }
     logout();
     navigate("/");
   };

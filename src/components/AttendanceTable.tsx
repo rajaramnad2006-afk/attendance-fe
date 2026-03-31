@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { getAttendanceRecords, type AttendanceRecord } from "@/utils/attendance";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, MapPin, CheckCircle2 } from "lucide-react";
+import { Search, MapPin, CheckCircle2, Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function AttendanceTable() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -50,18 +52,19 @@ export function AttendanceTable() {
               <TableHead>Code</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Photo</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                   Loading attendance records...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                   No attendance records found.
                 </TableCell>
               </TableRow>
@@ -88,6 +91,28 @@ export function AttendanceTable() {
                       <CheckCircle2 className="w-3 h-3" />
                       Present
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    {r.photo ? (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 shadow-sm">
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Student Identity</DialogTitle>
+                          </DialogHeader>
+                          <div className="flex justify-center mt-4">
+                            <img src={r.photo} alt={`${r.studentName}'s identity`} className="rounded-lg max-h-[60vh] object-contain shadow-lg" />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">No photo</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

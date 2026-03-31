@@ -15,6 +15,7 @@ export interface AttendanceRecord {
   status: "present";
   code: string;
   date: string;
+  photo?: string | null;
 }
 
 const USER_KEY = "currentUser";
@@ -50,10 +51,11 @@ export async function endSession(): Promise<void> {
 export async function submitAttendance(
   studentName: string,
   code: string,
-  location: [number, number] | null
+  location: [number, number] | null,
+  photo: string | null = null
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await api.post('/api/attendance', { studentName, code, location });
+    const response = await api.post('/api/attendance', { studentName, code, location, photo });
     return response.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
